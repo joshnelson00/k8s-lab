@@ -1,0 +1,64 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Kubernetes the Hard Way - base cluster
+# 1 control plane + 2 workers, static IPs, bare Ubuntu (no k8s installed yet)
+
+NODES = [
+  { name: "jumpbox",     ip: "192.168.56.10", cpus: 2, memory: 2048 },
+  { name: "controller",  ip: "192.168.56.11", cpus: 2, memory: 2048 },
+  { name: "worker-0",    ip: "192.168.56.12", cpus: 2, memory: 2048 },
+  { name: "worker-1",    ip: "192.168.56.13", cpus: 2, memory: 2048 },
+]
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/ubuntu2204"
+
+  NODES.each do |node|
+    config.vm.define node[:name] do |machine|
+      machine.vm.hostname = node[:name]
+
+      machine.vm.network "private_network",
+        ip: node[:ip],
+        libvirt__network_name: "k8s-hard-way",
+        libvirt__dhcp_enabled: false
+
+      machine.vm.provider :libvirt do |lv|
+        lv.cpus = node[:cpus]
+        lv.memory = node[:memory]
+        lv.driver = "kvm"
+        lv.machine_virtual_size = 20 # GB disk
+      end
+
+      # Basic prep every node needs: disable swap (k8s requirement),
+      # load required kernel modules, set sysctls for networking.
+      machine.vm.provision "shell", inline: <<-SHELL
+        set -e
+        swapoff -a
+        sed -i '/ swap / s/^/#/' /etc/fstab
+
+        cat <<EOF | tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
+        modprobe overlay
+        modprobe br_netfilter
+
+        cat <<EOF | tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+        sysctl --system
+
+        # Make hostnames resolvable cluster-wide
+        cat <<EOF >> /etc/hosts
+192.168.56.10 jumpbox
+192.168.56.11 controller
+192.168.56.12 worker-0
+192.168.56.13 worker-1
+EOF
+      SHELL
+    end
+  end
+end
