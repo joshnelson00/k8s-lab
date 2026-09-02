@@ -2,13 +2,13 @@
 # vi: set ft=ruby :
 
 # Kubernetes the Hard Way - base cluster
-# 1 control plane + 2 workers, static IPs, bare Ubuntu (no k8s installed yet)
+# 1 control plane + 2 nodes, static IPs, bare Ubuntu (no k8s installed yet)
 
 NODES = [
   { name: "jumpbox",     ip: "192.168.56.10", cpus: 2, memory: 2048 },
   { name: "controller",  ip: "192.168.56.11", cpus: 2, memory: 2048 },
-  { name: "worker-0",    ip: "192.168.56.12", cpus: 2, memory: 2048 },
-  { name: "worker-1",    ip: "192.168.56.13", cpus: 2, memory: 2048 },
+  { name: "node-0",    ip: "192.168.56.12", cpus: 2, memory: 2048 },
+  { name: "node-1",    ip: "192.168.56.13", cpus: 2, memory: 2048 },
 ]
 
 Vagrant.configure("2") do |config|
@@ -55,8 +55,8 @@ EOF
         cat <<EOF >> /etc/hosts
 192.168.56.10 jumpbox
 192.168.56.11 controller
-192.168.56.12 worker-0
-192.168.56.13 worker-1
+192.168.56.12 node-0
+192.168.56.13 node-1
 EOF
       SHELL
     end
