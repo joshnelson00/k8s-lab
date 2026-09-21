@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Node
+metadata:
+  name: k8s-lab-control-plane
+  labels:
+    role: node1
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: k8s-lab-worker
+  labels:
+    role: node2
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: k8s-lab-worker2
+  labels:
+    role: node3

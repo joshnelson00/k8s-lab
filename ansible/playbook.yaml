@@ -1,0 +1,8 @@
+---
+- hosts: all
+  tasks:
+    - name: Installed containerd on each box.
+      apt:
+        name: containerd
+        state: present
+        update_cache: true
